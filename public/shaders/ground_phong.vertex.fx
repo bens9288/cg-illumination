@@ -46,11 +46,17 @@ void main() {
     vec3 bitangent = neighbor_2.xyz - world_pos.xyz;
     model_normal = normalize(cross(bitangent, tangent));
 
-
+    // mat3 normal_matrix = mat3(world_pos);
+    // normal_matrix = transpose(normal_matrix);
+    // normal_matrix = inverse(normal_matrix);
+    // model_normal = normal_matrix*model_normal;
     
     // Pass vertex texcoord onto the fragment shader
     model_uv = uv;
 
     // Transform and project vertex from 3D world-space to 2D screen-space
     gl_Position = projection * view * world_pos;
+
+
+
 }
