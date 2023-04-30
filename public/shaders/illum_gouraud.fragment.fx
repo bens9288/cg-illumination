@@ -33,8 +33,6 @@ void main() {
 
 
     vec3 model_color = vec3(mat_color * texture(mat_texture, model_uv).rgb);
-    // Color
-    FragColor = vec4(model_color, 1.0);
 
     //fragment determines ambient and some parts of diffuse
     //fragColor * Ia 
