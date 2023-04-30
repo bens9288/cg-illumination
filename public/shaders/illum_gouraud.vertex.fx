@@ -5,6 +5,7 @@ precision highp float;
 in vec3 position;
 in vec3 normal;
 in vec2 uv;
+// in vec4 ambientLight;
 
 // Uniforms
 // projection 3D to 2D
@@ -26,14 +27,28 @@ out vec2 model_uv;
 out vec3 diffuse_illum;
 out vec3 specular_illum;
 
+
 void main() {
     // Pass diffuse and specular illumination onto the fragment shader
-    diffuse_illum = vec3(0.0, 0.0, 0.0);
-    specular_illum = vec3(0.0, 0.0, 0.0);
+    // diffuse_illum = vec3(0.0, 0.0, 0.0);
+    // specular_illum = vec3(0.0, 0.0, 0.0);
+
+    
+    vec3 N = normalize(normal);                 //surface normal
+    vec3 L = normalize(light_positions[0]);     //light normal
+    vec3 R = normalize(2.0 * dot(N, L) * N - L);    //reflected light normal
+    vec3 V = normalize(camera_position);        //camera view
 
     // Pass vertex texcoord onto the fragment shader
+    // model_uv = uv * texture_scale;
     model_uv = uv;
+    
+    diffuse_illum = vec3(light_colors[0]  * max(dot(N, L), 0.0));
+    
+    specular_illum = vec3(light_colors[0]  * pow(max(dot(R, V), 0.0), mat_shininess));
 
     // Transform and project vertex from 3D world-space to 2D screen-space
     gl_Position = projection * view * world * vec4(position, 1.0);
+
+
 }
