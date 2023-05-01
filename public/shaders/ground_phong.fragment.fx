@@ -24,24 +24,34 @@ out vec4 FragColor;
 
 void main() {
     // Color
-    //FragColor = vec4(mat_color * texture(mat_texture, model_uv).rgb, 1.0);
-
+   
     // normalized surface normal
     vec3 N = normalize(model_normal);
-    // normalized light direction
-    vec3 L = normalize(light_positions[0]);
-    // normalized reflected light direction
-    vec3 R = normalize(2.0 * dot(N, L) * N - L);
-    // normalized view direction
-    vec3 V = normalize(camera_position);
+    
+    // for each light
+    vec4 diffuse_total = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 specular_total = vec4(0.0, 0.0, 0.0, 0.0);
+    for(int i = 0; i < num_lights; i++) {
+        // normalized light direction
+        vec3 L = normalize(light_positions[i]);
+        // normalized reflected light direction
+        vec3 R = normalize(2.0 * dot(N, L) * N - L);
+        // normalized view direction
+        vec3 V = normalize(camera_position);
 
+        // specular
+        specular_total = specular_total + vec4(light_colors[i] * mat_specular * pow(max(dot(R, V), 0.0), mat_shininess), 1.0);
+        // diffuse
+        diffuse_total = diffuse_total + vec4(light_colors[i] * mat_color*texture(mat_texture, model_uv).rgb * max(dot(N, L), 0.0), 1.0);
+    }
 
     FragColor = min(vec4(1.0, 1.0, 1.0, 1.0),
         // ambient
         vec4(ambient * mat_color*texture(mat_texture, model_uv).rgb, 1.0) 
         // specular
-        + vec4(light_colors[0] * mat_specular * pow(max(dot(R, V), 0.0), mat_shininess), 1.0)
+        + specular_total
         // diffuse
-        + vec4(light_colors[0] * mat_color*texture(mat_texture, model_uv).rgb * max(dot(N, L), 0.0), 1.0)
+        + diffuse_total
         );
+
 }

@@ -129,8 +129,7 @@ class Renderer {
                     this.updateShaderUniforms(scene_idx, materials['illum_' + this.shading_alg]);
                     this.updateShaderUniforms(scene_idx, materials['ground_' + this.shading_alg]);
                     break;
-            }
-            
+            }  
         });
 
        
@@ -141,7 +140,7 @@ class Renderer {
             // update models and lights here (if needed)
             // ...
             
-
+           
 
             //moving lights and changing color
             
