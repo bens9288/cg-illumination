@@ -46,10 +46,11 @@ void main() {
     vec3 bitangent = neighbor_2.xyz - world_pos.xyz;
     model_normal = normalize(cross(bitangent, tangent));
 
-    // mat3 normal_matrix = mat3(world_pos);
+    // mat3 normal_matrix = mat3(world);
     // normal_matrix = transpose(normal_matrix);
     // normal_matrix = inverse(normal_matrix);
     // model_normal = normal_matrix*model_normal;
+    // model_normal = normalize(model_normal);
     
     // Pass vertex texcoord onto the fragment shader
     model_uv = uv;

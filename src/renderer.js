@@ -6,6 +6,7 @@ import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { RawTexture } from '@babylonjs/core/Materials/Textures/rawTexture';
 import { Color3, Color4 } from '@babylonjs/core/Maths/math.color';
 import { Vector2, Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { bakedVertexAnimation } from '@babylonjs/core/Shaders/ShadersInclude/bakedVertexAnimation';
 
 class Renderer {
     constructor(canvas, engine, material_callback, ground_mesh_callback) {
@@ -95,10 +96,61 @@ class Renderer {
         current_scene.models.push(sphere);
 
 
+         // Selected light to be translated when using the keyboard
+        scene.onKeyboardObservable.add((kbInfo) => {
+            switch (kbInfo.event.key) {
+                case 'a': 
+                    current_scene.lights[this.active_light].position = new Vector3(current_scene.lights[this.active_light].position.x - 1, current_scene.lights[this.active_light].position.y, current_scene.lights[this.active_light].position.z);
+                    this.updateShaderUniforms(scene_idx, materials['illum_' + this.shading_alg]);
+                    this.updateShaderUniforms(scene_idx, materials['ground_' + this.shading_alg]);
+                    break;
+                case 'd': 
+                    current_scene.lights[this.active_light].position = new Vector3(current_scene.lights[this.active_light].position.x + 1, current_scene.lights[this.active_light].position.y, current_scene.lights[this.active_light].position.z);                    
+                    this.updateShaderUniforms(scene_idx, materials['illum_' + this.shading_alg]);
+                    this.updateShaderUniforms(scene_idx, materials['ground_' + this.shading_alg]);
+                    break;
+                case 'f': 
+                    current_scene.lights[this.active_light].position = new Vector3(current_scene.lights[this.active_light].position.x, current_scene.lights[this.active_light].position.y - 1, current_scene.lights[this.active_light].position.z);
+                    this.updateShaderUniforms(scene_idx, materials['illum_' + this.shading_alg]);
+                    this.updateShaderUniforms(scene_idx, materials['ground_' + this.shading_alg]);
+                    break;
+                case 'r': 
+                    current_scene.lights[this.active_light].position = new Vector3(current_scene.lights[this.active_light].position.x, current_scene.lights[this.active_light].position.y + 1, current_scene.lights[this.active_light].position.z);
+                    this.updateShaderUniforms(scene_idx, materials['illum_' + this.shading_alg]);
+                    this.updateShaderUniforms(scene_idx, materials['ground_' + this.shading_alg]);
+                    break;
+                case 'w': 
+                    current_scene.lights[this.active_light].position = new Vector3(current_scene.lights[this.active_light].position.x, current_scene.lights[this.active_light].position.y, current_scene.lights[this.active_light].position.z - 1);
+                    this.updateShaderUniforms(scene_idx, materials['illum_' + this.shading_alg]);
+                    this.updateShaderUniforms(scene_idx, materials['ground_' + this.shading_alg]);
+                    break;
+                case 's': 
+                    current_scene.lights[this.active_light].position = new Vector3(current_scene.lights[this.active_light].position.x, current_scene.lights[this.active_light].position.y, current_scene.lights[this.active_light].position.z + 1);
+                    this.updateShaderUniforms(scene_idx, materials['illum_' + this.shading_alg]);
+                    this.updateShaderUniforms(scene_idx, materials['ground_' + this.shading_alg]);
+                    break;
+            }
+            
+        });
+
+       
+        
+        var alpha = 0;
         // Animation function - called before each frame gets rendered
         scene.onBeforeRenderObservable.add(() => {
             // update models and lights here (if needed)
             // ...
+            
+
+
+            //moving lights and changing color
+            
+            // current_scene.lights[this.active_light].position = new Vector3(10 * Math.sin(alpha), 0, 10 * Math.cos(alpha));
+            // sphere.metadata.mat_color = new Color3(Math.cos(alpha+1.0)+1.5,Math.cos(alpha+4.0)+1.5, Math.cos(alpha+78.0)+1.5 );
+            // alpha += 0.01;
+
+            
+
 
             // update uniforms in shader programs
             this.updateShaderUniforms(scene_idx, materials['illum_' + this.shading_alg]);
