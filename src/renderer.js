@@ -7,7 +7,7 @@ import { RawTexture } from '@babylonjs/core/Materials/Textures/rawTexture';
 import { Color3, Color4 } from '@babylonjs/core/Maths/math.color';
 import { Vector2, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { bakedVertexAnimation } from '@babylonjs/core/Shaders/ShadersInclude/bakedVertexAnimation';
-import { CreateDisc, CreatePolyhedron, CreateRibbon, CreateTorusKnot, Mesh, VertexData } from '@babylonjs/core';
+import { CreateBox, CreateCapsule, CreateCylinder, CreateDisc, CreateLathe, CreatePolyhedron, CreateRibbon, CreateTorus, CreateTorusKnot, Mesh, VertexData } from '@babylonjs/core';
 
 class Renderer {
     constructor(canvas, engine, material_callback, ground_mesh_callback) {
@@ -208,7 +208,7 @@ class Renderer {
         scene.useRightHandedSystem = true;
 
         // Create camera
-        current_scene.camera = new UniversalCamera('camera', new Vector3(0.0, 1.8, 10.0), scene);
+        current_scene.camera = new UniversalCamera('camera', new Vector3(0.0, 1.8, 25.0), scene);
         current_scene.camera.setTarget(new Vector3(0.0, 1.8, 0.0));
         current_scene.camera.upVector = new Vector3(0.0, 1.0, 0.0);
         current_scene.camera.attachControl(this.canvas, true);
@@ -224,8 +224,8 @@ class Renderer {
 
         // Create ground mesh
         let white_texture = RawTexture.CreateRGBTexture(new Uint8Array([255, 255, 255]), 1, 1, scene);
-        let ground_heightmap = new Texture('/heightmaps/heightmap2.png', scene);
-        ground_mesh.scaling = new Vector3(20.0, 1.0, 20.0);
+        let ground_heightmap = new Texture('/heightmaps/default.png', scene);
+        ground_mesh.scaling = new Vector3(0.0, 0.0, 0.0);
         ground_mesh.metadata = {
             mat_color: new Color3(0.10, 0.65, 0.15),
             mat_texture: white_texture,
@@ -240,39 +240,92 @@ class Renderer {
         // Create other models
 
         // CREATE CUSTOM MODEL TYPE -------------------------------------------------
-        let custom_car = new Mesh("custom", scene);
-        var positions = [-5, 2, -3, -7, -2, -3, -3, -2, -3, 5, 2, 3, 7, -2, 3, 3, -2, 3];
-        var indices = [0, 1, 2, 3, 4, 5];
+        let custom = new Mesh("custom", scene);
+        var positions = [
+
+            0.0, 0.0, 1.0,      // center of star front
+            0.0, 0.0, -1.0,     // center of star back
+
+            1.0, 1.0, 0.0,     // top segment
+            0.0, 3.0, 0.0, 
+            -1.0, 1.0, 0.0,  
+
+            3.0, 1.0, 0.0,      // left segment
+            1.62, -0.9, 0.0,
+
+            -3.0, 1.0, 0.0,     // right segment
+            -1.62, -0.9, 0.0,
+
+            0, -2.08, 0.0,      // bottm point
+            
+            -1.62, -2.98, 0.0,   // bottom left
+
+            1.62, -2.98, 0.0   // bottom right
+        ];
+
+        var indices = [
+            0, 4, 3,
+            0, 3, 2,
+   
+            0, 2, 5,
+            0, 5, 6,
+
+            0, 6, 11,
+            0, 11, 9,
+
+            0, 9, 10,
+            0, 10, 8, 
+
+            0, 8, 7, 
+            0, 7, 4, 
+
+
+            1, 3, 4,
+            1, 2, 3,
+   
+            1, 5, 2,
+            1, 6, 5,
+
+            1, 11, 6,
+            1, 9, 11,
+
+            1, 10, 9,
+            1, 8, 10, 
+
+            1, 7, 8, 
+            1, 4, 7, 
+        ];
 
         var normals = [];
-        custom_car.metadata = {
-            mat_color: new Color3(0.10, 0.35, 0.88),
+        custom.metadata = {
+            mat_color: new Color3(0.40, 0.35, 0.88),
             mat_texture: white_texture,
             mat_specular: new Color3(0.8, 0.8, 0.8),
-            mat_shininess: 16,
+            mat_shininess: 12,
             texture_scale: new Vector2(1.0, 1.0)
         }
 
-        VertexData.ComputeNormals(positions, indices, normals);
         var vertexData = new VertexData();
+
+        VertexData.ComputeNormals(positions, indices, normals, {useRightHandedSystem: false});
         vertexData.positions = positions;
         vertexData.indices = indices;
         vertexData.normals = normals;
-        vertexData.applyToMesh(custom_car, true);
-        console.log(vertexData)
+        vertexData.applyToMesh(custom, true);
+        custom.convertToFlatShadedMesh();
 
-        custom_car.material = materials['illum_' + this.shading_alg];
-        current_scene.models.push(custom_car);
+        custom.material = materials['illum_' + this.shading_alg];
+        current_scene.models.push(custom);
         
         // --------------------------------------------------
         
 
-
+        let sphere_texture = new Texture("https://assets.babylonjs.com/textures/lava/lavatile.jpg", scene);
         let sphere = CreateSphere('sphere', {segments: 32}, scene);
-        sphere.position = new Vector3(1.0, 0.5, 3.0);
+        sphere.position = new Vector3(1.0, 1.0, 5.0);
         sphere.metadata = {
             mat_color: new Color3(0.10, 0.35, 0.88),
-            mat_texture: white_texture,
+            mat_texture: sphere_texture,
             mat_specular: new Color3(0.8, 0.8, 0.8),
             mat_shininess: 16,
             texture_scale: new Vector2(1.0, 1.0)
@@ -280,30 +333,31 @@ class Renderer {
         sphere.material = materials['illum_' + this.shading_alg];
         current_scene.models.push(sphere);
 
-         let polygon = CreatePolyhedron('polygon', {type: 4}, scene);
-         polygon.position = new Vector3(2.0, 1.5, 2.0);
-         polygon.metadata = {
-             mat_color: new Color3(0.50, 0.35, 0.88),
-             mat_texture: white_texture,
-             mat_specular: new Color3(0.3, 0.3, 0.3),
-             mat_shininess: 30,
-             texture_scale: new Vector2(1.0, 1.0)
-         }
-         polygon.material = materials['illum_' + this.shading_alg];
-         current_scene.models.push(polygon);
+        let saturn_texture = new Texture("https://assets.babylonjs.com/textures/rock.png", scene);
+        let saturn_like = CreateSphere('sphere', {diameter: 2.25}, scene);
+        saturn_like.position = new Vector3(7.5, 5.0, 2.0);
+        saturn_like.metadata = {
+            mat_color: new Color3(0.95, 0.05, 0.08),
+            mat_texture: saturn_texture,
+            mat_specular: new Color3(0.3, 0.3, 0.3),
+            mat_shininess: 30,
+            texture_scale: new Vector2(1.0, 1.0)
+        }
+        saturn_like.material = materials['illum_' + this.shading_alg];
+        current_scene.models.push(saturn_like);
 
-         let shape = CreateTorusKnot('knot', {radius: 0.5}, scene);
-         shape.position = new Vector3(1.0, 3.5, 2.0);
-         shape.metadata = {
-             mat_color: new Color3(0.20, 0.45, 0.48),
-             mat_texture: white_texture,
-             mat_specular: new Color3(0.3, 0.3, 0.3),
-             mat_shininess: 30,
-             texture_scale: new Vector2(1.0, 1.0)
-         }
-         shape.material = materials['illum_' + this.shading_alg];
-         current_scene.models.push(shape);
 
+        let ring = CreateTorus('disc', {diameter: 3.0, thickness: 0.15}, scene);
+        ring.position = new Vector3(7.5, 5.0, 2.0);
+        ring.metadata = {
+            mat_color: new Color3(0.95, 0.05, 0.08),
+            mat_texture: saturn_texture,
+            mat_specular: new Color3(0.3, 0.3, 0.3),
+            mat_shininess: 30,
+            texture_scale: new Vector2(1.0, 1.0)
+        }
+        ring.material = materials['illum_' + this.shading_alg];
+        current_scene.models.push(ring);
 
         // Selected light to be translated when using the keyboard
         scene.onKeyboardObservable.add((kbInfo) => {
@@ -338,9 +392,10 @@ class Renderer {
             
 
             //moving lights and changing color
-            //current_scene.lights[this.active_light].position = new Vector3(10 * Math.sin(alpha), 0, 10 * Math.cos(alpha));
-            //sphere.metadata.mat_color = new Color3(Math.cos(alpha+1.0)+1.5,Math.cos(alpha+4.0)+1.5, Math.cos(alpha+78.0)+1.5 );
-            //alpha += 0.01;
+            current_scene.lights[this.active_light].position = new Vector3(10 * Math.sin(alpha), 0, 10 * Math.cos(alpha));
+            sphere.metadata.mat_color = new Color3(Math.cos(alpha+1.0)+1.5,Math.cos(alpha+4.0)+1.5, Math.cos(alpha+78.0)+1.5 );
+            sphere.position = new Vector3(7.5+ 12 * Math.sin(alpha+4)/2.5, 5, 12 * Math.cos(alpha+4)/2.5);
+            alpha += 0.002;
 
             
 

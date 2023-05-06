@@ -20,6 +20,13 @@ out vec2 model_uv;
 
 void main() {
     // Pass vertex normal onto the fragment shader
+
+    mat3 normal_matrix = mat3(world);
+    normal_matrix = transpose(normal_matrix);
+    normal_matrix = inverse(normal_matrix);
+    model_normal = normal_matrix*model_normal;
+    model_normal = normalize(model_normal);
+
     model_normal = normal;
     // Pass vertex texcoord onto the fragment shader
     model_uv = uv;
