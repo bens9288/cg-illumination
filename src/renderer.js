@@ -16,9 +16,9 @@ class Renderer {
         this.scenes = [
             {
                 scene: new Scene(this.engine),
-                background_color: new Color4(0.1, 0.1, 0.1, 1.0),
+                background_color: new Color4(0.1, 0.1, 0.2, 1.0),
                 materials: null,
-                ground_subdivisions: [500, 500],
+                ground_subdivisions: [100, 100],
                 ground_mesh: null,
                 camera: null,
                 ambient: new Color3(0.2, 0.2, 0.2),
@@ -70,8 +70,8 @@ class Renderer {
 
         // Create point light sources
         let light0 = new PointLight('light0', new Vector3(1.0, 1.0, 5.0), scene);
-        light0.diffuse = new Color3(1.0, 1.0, 1.0);
-        light0.specular = new Color3(1.0, 1.0, 1.0);
+        light0.diffuse = new Color3(0.0, 0.5, 1.0);
+        light0.specular = new Color3(0.0, 0.5, 1.0);
         current_scene.lights.push(light0);
 
         let light1 = new PointLight('light1', new Vector3(0.0, 3.0, 0.0), scene);
@@ -81,10 +81,10 @@ class Renderer {
 
         // Create ground mesh
         let white_texture = RawTexture.CreateRGBTexture(new Uint8Array([255, 255, 255]), 1, 1, scene);
-        let ground_heightmap = new Texture('/heightmaps/default.png', scene);
+        let ground_heightmap = new Texture('/heightmaps/volcano.png', scene);
         ground_mesh.scaling = new Vector3(20.0, 1.0, 20.0);
         ground_mesh.metadata = {
-            mat_color: new Color3(0.10, 0.65, 0.15),
+            mat_color: new Color3(0.10, 0.15, 0.65),
             mat_texture: white_texture,
             mat_specular: new Color3(0.0, 0.0, 0.0),
             mat_shininess: 1,
@@ -94,11 +94,11 @@ class Renderer {
         }
         ground_mesh.material = materials['ground_' + this.shading_alg];
 
-        // Create other models
-        let sphere = CreateSphere('sphere', {segments: 32}, scene);
-        sphere.position = new Vector3(1.0, 0.5, 3.0);
+        // // Create other models
+        let sphere = CreateSphere('sphere', {segments: 16}, scene);
+        sphere.position = new Vector3(0.1, 0.2, 2.0);
         sphere.metadata = {
-            mat_color: new Color3(0.10, 0.35, 0.88),
+            mat_color: new Color3(0.10, 0.1, 0.1),
             mat_texture: white_texture,
             mat_specular: new Color3(0.8, 0.8, 0.8),
             mat_shininess: 16,
@@ -106,6 +106,57 @@ class Renderer {
         }
         sphere.material = materials['illum_' + this.shading_alg];
         current_scene.models.push(sphere);
+
+        let sphere2 = CreateSphere('sphere', {segments: 16}, scene);
+        sphere2.position = new Vector3(-2.0, 0.2, 0.0);
+        sphere2.metadata = {
+            mat_color: new Color3(0.2, 0.1, 0.1),
+            mat_texture: white_texture,
+            mat_specular: new Color3(0.8, 0.8, 0.8),
+            mat_shininess: 16,
+            texture_scale: new Vector2(1.0, 1.0)
+        }
+        sphere.material = materials['illum_' + this.shading_alg];
+        current_scene.models.push(sphere2);
+
+        let custom_fish = new Mesh("custom", scene);
+        var positions = [
+                         1,2,1, 2,3,1, 1,2,2, //0,1,2,
+                         1,2,1, 2,3,1, 1,2,0, //3, 4, 5
+                         1,2,2, 2,3,1, 5,2,1, //6, 7, 8
+                         1,2,0, 2,3,1, 5,2,1, //9, 10, 11
+                         1,2,1, 2,1,1, 1,2,2, //12, 13, 14
+                         1,2,1, 2,1,1, 1,2,0, //15, 16, 17
+                         1,2,2, 2,1,1, 5,2,1, //18, 19, 20
+                         1,2,0, 2,1,1, 5,2,1, //21, 22, 23
+                         5,2,1, 6,3,1, 8,3,1, //24,25,26
+                         5,2,1, 6,1,1, 8,1,1, //27,28,29
+                         2,2,2, 3,1,2, 4,1,2, //30,31,32
+                         2,2,0, 3,1,0, 4,1,0, //33,34,35
+                         2,3,1, 3,3.5,1, 4.5,2,1, //36,37,38
+                        ]  
+        var indices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+                        24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38];
+
+        var normals = [];
+        custom_fish.metadata = {
+            mat_color: new Color3(0.88, 0.35, 0.18),
+            mat_texture: white_texture,
+            mat_specular: new Color3(0.8, 0.8, 0.8),
+            mat_shininess: 16,
+            texture_scale: new Vector2(1.0, 1.0)
+        }
+
+        VertexData.ComputeNormals(positions, indices, normals);
+        var vertexData = new VertexData();
+        vertexData.positions = positions;
+        vertexData.indices = indices;
+        vertexData.normals = normals;
+        vertexData.applyToMesh(custom_fish, true);
+        console.log(vertexData)
+
+        custom_fish.material = materials['illum_' + this.shading_alg];
+        current_scene.models.push(custom_fish);
 
 
         // Selected light to be translated when using the keyboard

@@ -65,10 +65,14 @@ void main() {
     // Pass vertex texcoord onto the fragment shader
     // model_uv = uv * texture_scale;
     model_uv = uv;
+    diffuse_illum = vec3(0.0, 0.0, 0.0);
+    specular_illum = vec3(0.0, 0.0, 0.0);
+    for(int i = 0; i < num_lights; i++) {
+    diffuse_illum = diffuse_illum +  vec3(light_colors[i]  * max(dot(N, L), 0.0));
     
-    diffuse_illum = vec3(light_colors[0]  * max(dot(N, L), 0.0));
+    specular_illum = specular_illum + vec3(light_colors[i]  * pow(max(dot(R, V), 0.0), mat_shininess));
+    }
     
-    specular_illum = vec3(light_colors[0]  * pow(max(dot(R, V), 0.0), mat_shininess));
 
     // Pass vertex texcoord onto the fragment shader
     model_uv = uv;
