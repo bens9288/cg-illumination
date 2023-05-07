@@ -9,6 +9,8 @@ import { Vector2, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { bakedVertexAnimation } from '@babylonjs/core/Shaders/ShadersInclude/bakedVertexAnimation';
 import { CreateBox, CreateCapsule, CreateCylinder, CreateDisc, CreateLathe, CreatePolyhedron, CreateRibbon, CreateTorus, CreateTorusKnot, Mesh, VertexData } from '@babylonjs/core';
 
+const BASE_URL = import.meta.env.BASE_URL || '/';
+
 class Renderer {
     constructor(canvas, engine, material_callback, ground_mesh_callback) {
         this.canvas = canvas;
@@ -30,6 +32,17 @@ class Renderer {
                 background_color: new Color4(0.1, 0.1, 0.1, 1.0),
                 materials: null,
                 ground_subdivisions: [500, 500],
+                ground_mesh: null,
+                camera: null,
+                ambient: new Color3(0.2, 0.2, 0.2),
+                lights: [],
+                models: []
+            },
+            {
+                scene: new Scene(this.engine),
+                background_color: new Color4(0.1, 0.1, 0.1, 1.0),
+                materials: null,
+                ground_subdivisions: [100, 100],
                 ground_mesh: null,
                 camera: null,
                 ambient: new Color3(0.2, 0.2, 0.2),
@@ -81,7 +94,7 @@ class Renderer {
 
         // Create ground mesh
         let white_texture = RawTexture.CreateRGBTexture(new Uint8Array([255, 255, 255]), 1, 1, scene);
-        let ground_heightmap = new Texture('/heightmaps/volcano.png', scene);
+        let ground_heightmap = new Texture(BASE_URL + 'heightmaps/volcano.png', scene);
         ground_mesh.scaling = new Vector3(20.0, 1.0, 20.0);
         ground_mesh.metadata = {
             mat_color: new Color3(0.10, 0.15, 0.65),
@@ -153,7 +166,6 @@ class Renderer {
         vertexData.indices = indices;
         vertexData.normals = normals;
         vertexData.applyToMesh(custom_fish, true);
-        console.log(vertexData)
 
         custom_fish.material = materials['illum_' + this.shading_alg];
         current_scene.models.push(custom_fish);
@@ -224,7 +236,7 @@ class Renderer {
 
         // Create ground mesh
         let white_texture = RawTexture.CreateRGBTexture(new Uint8Array([255, 255, 255]), 1, 1, scene);
-        let ground_heightmap = new Texture('/heightmaps/default.png', scene);
+        let ground_heightmap = new Texture(BASE_URL + 'heightmaps/default.png', scene);
         ground_mesh.scaling = new Vector3(0.0, 0.0, 0.0);
         ground_mesh.metadata = {
             mat_color: new Color3(0.10, 0.65, 0.15),
@@ -382,8 +394,6 @@ class Renderer {
                     break;
             }  
         });
-
-       
         var alpha = 0;
         // Animation function - called before each frame gets rendered
         scene.onBeforeRenderObservable.add(() => {
@@ -404,6 +414,148 @@ class Renderer {
             this.updateShaderUniforms(scene_idx, materials['illum_' + this.shading_alg]);
             this.updateShaderUniforms(scene_idx, materials['ground_' + this.shading_alg]);
         });
+    }
+    createScene2(scene_idx) {
+        let current_scene = this.scenes[scene_idx];
+        let scene = current_scene.scene;
+        let materials = current_scene.materials;
+        let ground_mesh = current_scene.ground_mesh;
+
+        // Set scene-wide / environment values
+        scene.clearColor = current_scene.background_color;
+        scene.ambientColor = current_scene.ambient;
+        scene.useRightHandedSystem = true;
+
+        // Create camera
+        current_scene.camera = new UniversalCamera('camera', new Vector3(0.0, 1.8, 10.0), scene);
+        current_scene.camera.setTarget(new Vector3(0.0, 1.8, 0.0));
+        current_scene.camera.upVector = new Vector3(0.0, 1.0, 0.0);
+        current_scene.camera.attachControl(this.canvas, true);
+        current_scene.camera.fov = 35.0 * (Math.PI / 180);
+        current_scene.camera.minZ = 0.1;
+        current_scene.camera.maxZ = 100.0;
+
+        // Create point light sources
+        let light0 = new PointLight('light0', new Vector3(1.0, 1.0, 5.0), scene);
+        light0.diffuse = new Color3(0.0, 0.5, 1.0);
+        light0.specular = new Color3(0.0, 0.5, 1.0);
+        current_scene.lights.push(light0);
+
+        let light1 = new PointLight('light1', new Vector3(0.0, 3.0, 0.0), scene);
+        light1.diffuse = new Color3(1.0, 1.0, 1.0);
+        light1.specular = new Color3(1.0, 1.0, 1.0);
+        current_scene.lights.push(light1);
+
+        // Create ground mesh
+        let white_texture = RawTexture.CreateRGBTexture(new Uint8Array([255, 255, 255]), 1, 1, scene);
+        let ground_heightmap = new Texture(BASE_URL + 'heightmaps/oceanfloor.png', scene);
+        ground_mesh.scaling = new Vector3(20.0, 1.0, 20.0);
+        ground_mesh.metadata = {
+            mat_color: new Color3(0.10, 0.65, 0.15),
+            mat_texture: white_texture,
+            mat_specular: new Color3(0.0, 0.0, 0.0),
+            mat_shininess: 1,
+            texture_scale: new Vector2(1.0, 1.0),
+            height_scalar: 1.0,
+            heightmap: ground_heightmap
+        }
+        ground_mesh.material = materials['ground_' + this.shading_alg];
+        
+
+        let house_texture = new Texture("https://assets.babylonjs.com/textures/rock.png", scene);
+        let house = CreateBox('house', {size: 2}, scene);    
+        house.position = new Vector3(2, 1, 2);
+        house.metadata = {
+            mat_color: new Color3(0.95, 0.00, 0.00),
+            mat_texture: house_texture,
+            mat_specular: new Color3(0.3, 0.3, 0.3),
+            mat_shininess: 30,
+            texture_scale: new Vector2(1.0, 1.0)
+        }
+        house.material = materials['illum_' + this.shading_alg];
+        current_scene.models.push(house);
+
+        let custom_roof = new Mesh("custom",scene);
+        var positions = [
+            // 2,3,2, -1,1,2, 5,1,2,
+            2,3,2, 0,2,4, 4,2,4,  //0,1,2
+            2,3,2, 0,2,0, 4,2,0, 
+            2,3,2, 0,2,0, 4,2,4,
+            2,3,2, 4,2,4, 0,2,0,
+
+        ];
+        var indices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+        var normals = [];
+        custom_roof.metadata = {
+            mat_color: new Color3(0.40, 0.35, 0.88),
+            mat_texture: white_texture,
+            mat_specular: new Color3(0.8, 0.8, 0.8),
+            mat_shininess: 12,
+            texture_scale: new Vector2(1.0, 1.0)
+        }
+
+        var vertexData = new VertexData();
+
+
+        // let roof = CreatePolyhedron('roof', {type:10, size: 2}, scene);
+        // roof.position = new Vector3(1, 3, 3);
+        // roof.metadata = {
+        //     mat_color: new Color3(0.88, 0.35, 0.18),
+        //     mat_texture: white_texture,
+        //     mat_specular: new Color3(0.8, 0.8, 0.8),
+        //     mat_shininess: 16,
+        //     texture_scale: new Vector2(1.0, 1.0)
+        // }
+
+        VertexData.ComputeNormals(positions, indices, normals);
+        var vertexData = new VertexData();
+        vertexData.positions = positions;
+        vertexData.indices = indices;
+        vertexData.normals = normals;
+        vertexData.applyToMesh(custom_roof, true);
+
+        custom_roof.material = materials['illum_' + this.shading_alg];
+        current_scene.models.push(custom_roof);
+
+
+
+        // Selected light to be translated when using the keyboard
+        scene.onKeyboardObservable.add((kbInfo) => {
+            switch (kbInfo.event.key) {
+                case 'a': 
+                    current_scene.lights[this.active_light].position = new Vector3(current_scene.lights[this.active_light].position.x - 1, current_scene.lights[this.active_light].position.y, current_scene.lights[this.active_light].position.z);
+                    break;
+                case 'd': 
+                    current_scene.lights[this.active_light].position = new Vector3(current_scene.lights[this.active_light].position.x + 1, current_scene.lights[this.active_light].position.y, current_scene.lights[this.active_light].position.z);                    
+                    break;
+                case 'f': 
+                    current_scene.lights[this.active_light].position = new Vector3(current_scene.lights[this.active_light].position.x, current_scene.lights[this.active_light].position.y - 1, current_scene.lights[this.active_light].position.z);
+                    break;
+                case 'r': 
+                    current_scene.lights[this.active_light].position = new Vector3(current_scene.lights[this.active_light].position.x, current_scene.lights[this.active_light].position.y + 1, current_scene.lights[this.active_light].position.z);
+                    break;
+                case 'w': 
+                    current_scene.lights[this.active_light].position = new Vector3(current_scene.lights[this.active_light].position.x, current_scene.lights[this.active_light].position.y, current_scene.lights[this.active_light].position.z - 1);
+                    break;
+                case 's': 
+                    current_scene.lights[this.active_light].position = new Vector3(current_scene.lights[this.active_light].position.x, current_scene.lights[this.active_light].position.y, current_scene.lights[this.active_light].position.z + 1);
+                    break;
+            }  
+        });
+
+       
+        var alpha = 0;
+        // Animation function - called before each frame gets rendered
+        scene.onBeforeRenderObservable.add(() => {
+            // update models and lights here (if needed)
+            // ...
+            
+
+            // update uniforms in shader programs
+            this.updateShaderUniforms(scene_idx, materials['illum_' + this.shading_alg]);
+            this.updateShaderUniforms(scene_idx, materials['ground_' + this.shading_alg]);
+        });
+        
     }
 
     updateShaderUniforms(scene_idx, shader) {
